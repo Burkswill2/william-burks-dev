@@ -1,6 +1,6 @@
 ---
 author: Will Burks
-pubDatetime: 2026-04-19T12:00:00Z
+pubDatetime: 2026-04-18T12:00:00Z
 title: "Agent reliability is an infrastructure problem, not a prompting problem"
 featured: true
 draft: false
