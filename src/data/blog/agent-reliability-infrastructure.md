@@ -26,6 +26,12 @@ better prompts. The wins that stuck were structural — deny rules, phase gates,
 hook-based guards, and eventually an architectural split into two agents with
 a file as the interface contract.
 
+The agent is not stupid. It is uncertain. When it's uncertain, it reaches for
+tools. If the wrong tool is reachable, it will eventually reach for it. Your
+job as the operator is less about writing the right words and more about
+making the wrong tool physically unavailable. That's the frame for everything
+that follows.
+
 Waste percentage is the headline metric. What I was actually buying is two
 things: **predictable agent behavior** — I can say before a run what the
 agent will and won't do — and **efficient completion** in calls, time, and
@@ -209,11 +215,14 @@ permission set for Phase A doesn't include it. This killed the
 `make lint` before editing 100% of the time to 0%.
 
 Phase gates are also where the `STOP GATE` mechanism lives: after Phase 2,
-the command file reaches a hard stop with an explicit list of files the agent
-may not re-read, re-grep, or investigate further. Early versions of this were
-prose ("do not investigate further after Phase 2"). Those got ignored. The
-version that worked is a literal labelled section with explicit file
-prohibitions, placed at the end of every step that could drift.
+the command file reaches a hard stop. Early versions of this were prose ("do
+not investigate further after Phase 2"). Those got ignored — 4 out of 4
+consecutive runs on Sonnet. The version that worked is a sentinel file:
+`make arm-qa-gate` runs `touch /tmp/agent-qa-epic-done.txt`, and a
+`PreToolUse` hook checks for that file on every subsequent tool call and
+exits 2 if it exists. The labelled section in the command file is
+documentation. The sentinel is enforcement. The hook is the line the agent
+cannot cross.
 
 ## The architectural move
 
@@ -268,6 +277,36 @@ I did not know the tee-drop pattern before I started. I don't think you can
 predict it from first principles. You find it by running the agent 5 times
 and noticing the same deviation.
 
+## The economics
+
+![Line chart showing QA-engineer waste % by epic — dropping from 27–32% in Epics 6/7/9HF down to a 16–20% floor in Epics 9.5, 10, and 10b after structural fixes shipped.](@/assets/images/wasteChart.png)
+
+The waste metric is useful for tuning, but it also has a direct cost
+interpretation. Model it simply: each tool call has unit cost C = 1. Every
+call is either required (r) or wasted (w), where r + w = 1. At 67% waste —
+the baseline — required calls represent 33% of total spend. At 18% waste,
+they represent 82%.
+
+For a story of equivalent complexity:
+
+```
+cost ratio = r_baseline / r_current = 0.33 / 0.82 ≈ 0.40
+```
+
+An outcome that cost $1.00 at baseline costs ~$0.40 now — about 60%
+cheaper per outcome.
+
+Three assumptions behind this: (1) equal cost per call regardless of tool
+type, (2) $1 is a normalized unit, not a real dollar figure, and (3)
+required calls are constant for comparable scope. The third is the
+load-bearing one — required call count scales with story complexity, so the
+comparison only holds when scope is held fixed.
+
+This is also why the pattern shift matters alongside the percentage.
+Eliminating grep-storms and post-stop rampages is different from cutting
+waste by writing tighter stories with less scope ambiguity. Both happened
+here, and a follow-up post will break down how much each drove.
+
 ## What's left
 
 The 16–20% floor across epics 9.5 / 10 / 10b looks stable. The waste that
@@ -313,16 +352,22 @@ represented as a structured file (fixlists, sentinels, tables). Every fix
 that failed was a sentence in a prompt. The phase boundary between these
 two categories is pretty sharp.
 
-The agent is not stupid. It is uncertain. When it's uncertain, it reaches for
-tools. If the wrong tool is reachable, it will eventually reach for it. Your
-job as the operator is less about writing the right words and more about
-making the wrong tool physically unavailable.
-
 That's what I actually want: **predictable behavior and predictable
 delivery**. If you know exactly what an agent will do, you can trust the
 quality of what it produces. An agent whose behavior space you can't
 describe is an agent whose output has to be re-audited from scratch every
 run.
+
+The uncertainty framing at the top of this post is the reason structural
+enforcement works where prose doesn't. Prose narrows the space of allowed
+actions by asking the agent to remember a constraint. Structure narrows it
+by making the wrong action physically unavailable. One depends on the agent;
+the other doesn't.
+
+*This is part one of a series. Part two will cover the cost model in depth —
+how to price outcomes rather than calls, what the data shows about
+required-call variance across story complexity, and what rebuilding lead-engineer
+measurement coverage reveals about the full-system picture.*
 
 ---
 
