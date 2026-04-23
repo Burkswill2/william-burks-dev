@@ -14,7 +14,7 @@ description: "The PreToolUse hook is a line agents can't cross. Prose rules ask 
 
 ![Orange construction caution tape reading "DO NOT CROSS" stretched across a boundary.](@/assets/images/doNotCross.png)
 
-*The PreToolUse hook is a line agents cannot cross. That's the move. Prose rules ask the agent to behave; deny lists make the misbehavior physically impossible. Photo by [Andrej Lišakov](https://unsplash.com/@lishakov) on Unsplash.*
+*Prose rules ask the agent to behave. Structure makes the wrong action physically unavailable. Photo by [Andrej Lišakov](https://unsplash.com/@lishakov) on Unsplash.*
 
 I spent two weeks instrumenting the agents that do QA work on my personal
 trading research repo. Every tool call is logged. Every run is audited by
